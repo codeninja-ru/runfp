@@ -39,16 +39,16 @@ begin
   AssertTrue('./runfp prints help info', ContainsStr(out, 'Usage:'));
 
   success := RunCommand('runfp', ['test/helloworld.pas'], out, [poWaitOnExit]);
-  AssertTrue('./runfp test/helloword.pas prints hello world', AnsiContainsStr(out, 'Hello World'));
+  AssertTrue('./runfp test/helloword.pas prints hello world', ContainsStr(out, 'Hello World'));
 
   success := RunCommand('runfp', ['test/error.pas'], out, [poWaitOnExit]);
-  AssertTrue('./runfp test/error.pas prints error', AnsiContainsStr(out, 'Fatal: Compilation aborted'));
+  AssertTrue('./runfp test/error.pas prints error', ContainsStr(out, 'Fatal: Compilation aborted'));
 
   success := RunCommand('runfp', ['test/notfound.pas'], out, [poWaitOnExit]);
-  AssertTrue('./runfp prints error if file not found', AnsiContainsStr(out, 'file: test/notfound.pas not found'));
+  AssertTrue('./runfp prints error if file not found', ContainsStr(out, 'file: test/notfound.pas not found'));
 
   success := RunCommand('runfp', ['test/params.pas', '-param1', '-param2'], out, [poWaitOnExit]);
-  AssertTrue('./runfp passes params to the app', AnsiContainsStr(out, '-param1 passed') and AnsiContainsStr(out, '-param2 passed') and AnsiContainsStr(out, 'params count: 2'));
+  AssertTrue('./runfp passes params to the app', ContainsStr(out, '-param1 passed') and ContainsStr(out, '-param2 passed') and ContainsStr(out, 'params count: 2'));
 
   AssertTrue('./runfp passes stdin to the app', false);
 end.
