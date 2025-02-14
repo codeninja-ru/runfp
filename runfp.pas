@@ -5,7 +5,7 @@ program runfp;
 {todo cache files?}
 {todo shebang}
 
-uses SysUtils, Process;
+uses SysUtils, StrUtils, Process;
 
 procedure showHelp;
 begin
@@ -13,7 +13,7 @@ begin
   writeln('filename - can be any pascal source file');
 end;
 
-function execProgram(filename: string): integer;
+function execProgram(filename: string; params: array of string): integer;
 const BUFF_SIZE = 1024;
 var workDir: string;
     tempDir: string;
@@ -21,6 +21,8 @@ var workDir: string;
     programPath: string;
     fpcOut: string;
     status: integer;
+    paramsStr: string;
+    i: integer;
 begin
   tempDir := GetTempDir(false) + 'runfp/';
   if not DirectoryExists(tempDir) then
@@ -42,7 +44,7 @@ begin
     writeln('Cound not run fpc');
     Result := 2;
   end else
-    if status <> 0then
+    if status <> 0 then
   begin
     writeln(fpcOut);
     Result := status;
@@ -51,7 +53,9 @@ begin
   begin
     if FileExists(programPath) then
     begin
-      Result := ExecuteProcess(programPath, '', []);
+      for i := 0 to Length(params) - 1 do
+        paramsStr := paramsStr + params[i] + ' ';
+      Result := ExecuteProcess(programPath, Trim(paramsStr), []);
       {todo params} 
       {todo user input programs}
       {todo working dir}
@@ -67,24 +71,24 @@ end;
 
 var i: integer;
     paramFilename: string;
+    params: array of string;
 
 begin
-  if paramCount() <> 1 then
+  if paramCount() = 0 then
   begin
     showHelp();
-  end
-  else
+  end else
   begin
-    for i := 0 to paramCount() do
-    begin
-      paramFilename := paramStr(i);
-    end;
+    paramFilename := paramStr(1);
+    SetLength(params, paramCount() - 1);
+    for i := 2 to paramCount() do
+      params[i - 2] := paramStr(i);
 
     if paramFilename <> '' then
     begin
       if FileExists(paramFilename) then
       begin
-        ExitCode := execProgram(paramFilename);
+        ExitCode := execProgram(paramFilename, params);
       end else
       begin
         writeln('file: ' + paramFilename + ' not found');

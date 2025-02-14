@@ -1,6 +1,8 @@
 program params;
 var i: integer;
 begin
-  for i := 0 to paramCount() - 1 do
+  write('params count: ');
+  writeln(paramCount());
+  for i := 1 to paramCount() do
     writeln(paramStr(i) + ' passed');
 end.

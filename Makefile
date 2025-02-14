@@ -5,3 +5,7 @@ clean:
 
 build: clean
 	fpc -OG -O2 runfp.pas
+
+
+test: build
+	./runfp test.pas

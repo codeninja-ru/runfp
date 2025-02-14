@@ -36,7 +36,7 @@ var status: integer;
 begin
   success := RunCommand('runfp', [], out, [poWaitOnExit]);
   AssertTrue('./runfp is executable', success);
-  AssertTrue('./runfp prints help info', AnsiContainsStr(out, 'Usage:'));
+  AssertTrue('./runfp prints help info', ContainsStr(out, 'Usage:'));
 
   success := RunCommand('runfp', ['test/helloworld.pas'], out, [poWaitOnExit]);
   AssertTrue('./runfp test/helloword.pas prints hello world', AnsiContainsStr(out, 'Hello World'));
@@ -48,7 +48,7 @@ begin
   AssertTrue('./runfp prints error if file not found', AnsiContainsStr(out, 'file: test/notfound.pas not found'));
 
   success := RunCommand('runfp', ['test/params.pas', '-param1', '-param2'], out, [poWaitOnExit]);
-  AssertTrue('./runfp passes params to the app', AnsiContainsStr(out, '-param1 passed') and AnsiContainsStr(out, '-param2 passed'));
+  AssertTrue('./runfp passes params to the app', AnsiContainsStr(out, '-param1 passed') and AnsiContainsStr(out, '-param2 passed') and AnsiContainsStr(out, 'params count: 2'));
 
   AssertTrue('./runfp passes stdin to the app', false);
 end.
