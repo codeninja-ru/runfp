@@ -2,6 +2,9 @@ program runfp;
 
 {$mode objfpc}{$H+}
 
+{todo cache files?}
+{todo shebang}
+
 uses SysUtils, Process;
 
 procedure showHelp;
@@ -13,12 +16,28 @@ end;
 function execProgram(filename: string): integer;
 const BUFF_SIZE = 1024;
 var workDir: string;
+    tempDir: string;
     programName: string;
+    programPath: string;
     fpcOut: string;
     status: integer;
 begin
-  workDir := GetCurrentDir();
-  if RunCommandIndir(workDir, 'fpc', [filename], fpcOut, status, [], swoNone) <> 0 then
+  tempDir := GetTempDir(false) + 'runfp/';
+  if not DirectoryExists(tempDir) then
+  begin
+    if not CreateDir(tempDir) then raise Exception.Create('Failed to create temp dir ' + tempDir);
+  end;
+
+  programName := ExtractFileName(filename);
+  {$IFDEF Windows}
+  programName := ChangeFileExt(programName, '.exe');
+  {$ELSE}
+  programName := ChangeFileExt(programName, '');
+  {$ENDIF}
+  programPath := tempDir + programName;
+
+  workDir := ExtractFilePath(ExpandFileName(filename));
+  if RunCommandIndir(workDir, 'fpc', [workDir + ExtractFileName(filename), '-FU' + tempDir, '-FE' + tempDir], fpcOut, status, [], swoNone) <> 0 then
   begin
     writeln('Cound not run fpc');
     Result := 2;
@@ -30,21 +49,17 @@ begin
   end
   else
   begin
-    programName := ExtractFileName(filename);
-    {$IFDEF Windows}
-    programName := ChangeFileExt(programName, '.exe');
-    {$ELSE}
-    programName := ChangeFileExt(programName, '');
-    {$ENDIF}
-    if FileExists(programName) then
+    if FileExists(programPath) then
     begin
-      Result := ExecuteProcess(programName, '', []);
-      //{todo params} 
-      //{todo pipes}
+      Result := ExecuteProcess(programPath, '', []);
+      {todo params} 
+      {todo user input programs}
+      {todo working dir}
+      {todo pipes}
     end else
     begin
       WriteErrorsToStdErr := true;
-      writeln('Error: file ' + programName + ' is not found');
+      writeln('Error: file ' + programName + ' is not found in ' + workDir);
       Result := 2;
     end;
   end;
