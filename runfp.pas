@@ -2,7 +2,7 @@ program runfp;
 
 {$mode objfpc}{$H+}
 
-uses SysUtils, Classes, Process;
+uses SysUtils, Process;
 
 procedure showHelp;
 begin
@@ -13,57 +13,40 @@ end;
 function execProgram(filename: string): integer;
 const BUFF_SIZE = 1024;
 var workDir: string;
-    code: integer;
     programName: string;
-    fpcApp: TProcess;
-    buff: array[1..BUFF_SIZE] of byte;
-    byteCount: integer;
-    fpcOut: TMemoryStream;
-    i: integer;
+    fpcOut: string;
+    status: integer;
 begin
-  fpcApp := TProcess.Create(nil);
-  fpcOut := TMemoryStream.Create;
-  try
-    fpcApp.Executable := 'fpc';
-    fpcApp.Parameters.Add(filename);
-    fpcApp.Options := fpcApp.Options + [poWaitOnExit, poUsePipes];
-    fpcApp.Execute;
-    repeat
-      byteCount := fpcApp.Output.Read(buff, BUFF_SIZE);
-      fpcOut.Write(buff, byteCount);
-    until byteCount = 0;
-    if fpcApp.ExitStatus <> 0 then
+  workDir := GetCurrentDir();
+  if RunCommandIndir(workDir, 'fpc', [filename], fpcOut, status, [], swoNone) <> 0 then
+  begin
+    writeln('Cound not run fpc');
+    Result := 2;
+  end else
+    if status <> 0then
+  begin
+    writeln(fpcOut);
+    Result := status;
+  end
+  else
+  begin
+    programName := ExtractFileName(filename);
+    {$IFDEF Windows}
+    programName := ChangeFileExt(programName, '.exe');
+    {$ELSE}
+    programName := ChangeFileExt(programName, '');
+    {$ENDIF}
+    if FileExists(programName) then
     begin
-      fpcOut.Position := 0;
-      repeat
-        byteCount := fpcOut.Read(buff, BUFF_SIZE);
-        FileWrite(TextRec(StdErr).Handle, buff, byteCount);
-      until byteCount = 0;
-      Result := fpcApp.ExitStatus;
-    end
-    else
+      Result := ExecuteProcess(programName, '', []);
+      //{todo params} 
+      //{todo pipes}
+    end else
     begin
-      programName := ExtractFileName(filename);
-      {$IFDEF Windows}
-      programName := ChangeFileExt(programName, '.exe');
-      {$ELSE}
-      programName := ChangeFileExt(programName, '');
-      {$ENDIF}
-      if FileExists(programName) then
-      begin
-        Result := ExecuteProcess(programName, '', []);
-        //{todo params} 
-        //{todo pipes}
-      end else
-      begin
-        WriteErrorsToStdErr := true;
-        writeln('Error: file ' + programName + ' is not found');
-        Result := 2;
-      end;
+      WriteErrorsToStdErr := true;
+      writeln('Error: file ' + programName + ' is not found');
+      Result := 2;
     end;
-  finally
-    fpcApp.Free;
-    fpcOut.Free;
   end;
 end;
 
