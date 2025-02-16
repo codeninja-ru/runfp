@@ -7,6 +7,8 @@ program runfp;
 
 uses SysUtils, StrUtils, Process;
 
+const FPC = {$IFDEF Windows}'fpc.exe'{$ELSE}'fpc'{$ENDIF};
+
 procedure showHelp;
 begin
   writeln('Usage: runfp [option] filename');
@@ -39,7 +41,7 @@ begin
   programPath := tempDir + programName;
 
   workDir := ExtractFilePath(ExpandFileName(filename));
-  if RunCommandIndir(workDir, 'fpc', [workDir + ExtractFileName(filename), '-FU' + tempDir, '-FE' + tempDir], fpcOut, status, [], swoNone) <> 0 then
+  if RunCommandIndir(workDir, FPC, [workDir + ExtractFileName(filename), '-FU' + tempDir, '-FE' + tempDir], fpcOut, status, [], swoNone) <> 0 then
   begin
     writeln('Cound not run fpc');
     Result := 2;
@@ -47,17 +49,16 @@ begin
     if status <> 0 then
   begin
     writeln(fpcOut);
-    Result := status;
+    Result := 2;
   end
   else
   begin
     if FileExists(programPath) then
     begin
+      paramsStr := '';
       for i := 0 to Length(params) - 1 do
         paramsStr := paramsStr + params[i] + ' ';
       Result := ExecuteProcess(programPath, Trim(paramsStr), []);
-      {todo params} 
-      {todo user input programs}
       {todo working dir}
       {todo pipes}
     end else
